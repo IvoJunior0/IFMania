@@ -52,6 +52,7 @@ const menu = document.getElementById('menu');
 const comboDiv = document.getElementById('combo');
 const hitsound = document.getElementById('hit');
 const hitImage = document.getElementById('maniahit');
+const accuracyDiv = document.getElementById('acc');
 
 // Variáveis principais e importantes (e algumas outras nem tanto).
 const velocidade = 20;
@@ -59,6 +60,10 @@ const zonaDeAcerto = 540;
 const offset = 2746;
 let gamePause = false;
 let combo = 0;
+let acertosQtd = [0, 0, 0, 0, 0, 0]; // Cada index representa os misses, 50, 100, 200, 300 e 320 respectivamente.
+let hitsQtdTotal = 0;
+let pontuacaoTotal = 0;
+let precisao;
 
 // Menor valor que a nota pode chegar
 const topMax = 600;
@@ -105,24 +110,45 @@ function verificarAcerto(coluna) {
             combo++;
             hitImage.src = "./assets/skin/300.png";
             nota.remove();
+            acertosQtd[5]++;
+            //pontuacaoTotal += acertosQtd[5] * 320;
+            hitsQtdTotal++;
             break;
-        } else if (distancia <= 50) {
+        } else if (distancia <= 40) {
+            acertou = true;
+            combo++;
+            hitImage.src = "./assets/skin/300.png";
+            nota.remove();
+            acertosQtd[4]++;
+            //pontuacaoTotal += acertosQtd[4] * 300;
+            hitsQtdTotal++;
+            break;
+        } else if (distancia <= 55) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/200.png";
             nota.remove();
+            acertosQtd[3]++;
+            //pontuacaoTotal += acertosQtd[3] * 200;
+            hitsQtdTotal++;
             break;
-        } else if (distancia <= 78) {
+        } else if (distancia <= 72) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/100.png";
             nota.remove();
+            acertosQtd[2]++;
+            //pontuacaoTotal += acertosQtd[2] * 100;
+            hitsQtdTotal++;
             break;
-        } else if (distancia <= 99) {
+        } else if (distancia <= 90) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/50.png";
             nota.remove();
+            acertosQtd[1]++;
+            //pontuacaoTotal += acertosQtd[1] * 50;
+            hitsQtdTotal++;
             break;
         }
     }
@@ -130,9 +156,16 @@ function verificarAcerto(coluna) {
     if (!acertou) {
         combo = 0;
         hitImage.src = "./assets/skin/miss.png";
+        acertosQtd[0]++;
+        hitsQtdTotal++;
     }
 
+    pontuacaoTotal = acertosQtd[1] * 50 + acertosQtd[2] * 100 + acertosQtd[3] * 200 + acertosQtd[4] * 300 + acertosQtd[5] * 320;
+    precisao = (pontuacaoTotal / (hitsQtdTotal * 300)) * 100;
+    if (precisao > 100) precisao = 10;
+
     comboDiv.innerHTML = combo;
+    accuracyDiv.innerHTML = precisao.toFixed(2);
 }
 
 //TODO: fzr isso funcionar dps
