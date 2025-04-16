@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Mini Osu!mania</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IFMania</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -10,17 +11,25 @@
         <h1>🎵 Bem-vindo ao Jogo!</h1>
         <p>Aperte <strong>Enter</strong> para começar</p>
     </div>
-    <h2>Mini Osu!mania</h2>
+    <h2>IFMania</h2>
     <p>Use as teclas <strong>A S K L</strong> para acertar as notas!</p>
+    <div id="menu-pause">
+
+    </div>
     <div id="game">
+        <div id="top-mask"></div>
+        <div id="combo"></div>
+        <div id="hit">
+            <img src="" id="maniahit">
+        </div>
         <div class="column" data-key="a"></div>
         <div class="column" data-key="s"></div>
         <div class="column" data-key="k"></div>
         <div class="column" data-key="l"></div>
         <div id="hit-zone"></div>
     </div>
-    <audio id="musica" src="musica.mp3"></audio>
+    <audio id="musica" src="musica.mp3" preload="auto"></audio>
+    <audio id="hit" src="./assets/hit.wav" preload="auto"></audio>
     <script src="./js/game.js"></script>
 </body>
-
 </html>
