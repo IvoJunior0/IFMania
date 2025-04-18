@@ -2,10 +2,18 @@
     font-family: 'Yugen';
     src: url("../assets/fonts/Hyperspace\ Bold.otf");
 }
+*, 
+*:after,
+*:before {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+}
 
 body {
     margin: 0;
-    background: #111;
+    background: rgb(11, 11, 11);
     color: white;
     font-family: sans-serif;
     text-align: center;
@@ -16,16 +24,19 @@ body {
     left: 0;
     width: 100%;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(11, 11, 11, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    z-index: 10;
+    z-index: 12;
 }
 #menu h1 {
     font-size: 2rem;
     margin-bottom: 20px;
+}
+#menu-pause {
+    display: none;
 }
 #game {
     position: relative;
@@ -54,6 +65,7 @@ body {
     background: white;
     top: 0;
     border: 3px solid red;
+    z-index: 1;
 }
 .nota1{
     background: cyan;
@@ -102,3 +114,36 @@ body {
     width: 100%;
     z-index: 5;
 }
+#beatline {
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background: gray;
+    z-index: 0;
+}
+#acc {
+    position: absolute;
+    top:30px;
+    right: 40px;
+    font-size: 1.5rem;
+}
+
+/* .feedback {
+    position: absolute;
+    bottom: 60px;
+    font-size: 24px;
+    color: white;
+    animation: subirDesaparecer 0.8s ease forwards;
+    pointer-events: none;
+}
+
+.feedback.miss { color: red; }
+.feedback._50 { color: gray; }
+.feedback._100 { color: blue; }
+.feedback._200 { color: purple; }
+.feedback._300 { color: gold; }
+
+@keyframes subirDesaparecer {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-30px); }
+} */
