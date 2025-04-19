@@ -86,11 +86,11 @@ const beatmapTotalTime = 141133;
 const bpm = 175;
 
 // Menor valor que a nota pode chegar
-const topMax = 600;
+const playfieldHeight = 600;
 const intervaloAnimacaoNota = 16;
 
-const preempt = (topMax / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
-const scrollVelocity = topMax / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim
+const preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
+const scrollVelocity = playfieldHeight / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim
 
 function getTempoAtual() {
     return (audioContext.currentTime * 1000) - startTimeAudio;
@@ -113,7 +113,7 @@ function animarNota(nota) {
         top += velocidade;
         nota.style.top = top + 'px';
     
-        if (top > topMax) {
+        if (top > playfieldHeight) {
             nota.remove();
             return;
         }
@@ -124,6 +124,7 @@ function animarNota(nota) {
 }
 
 function verificarAcerto(coluna) {
+    if (getTempoAtual() < offset-200) {return;}
     const notas = coluna.querySelectorAll('.nota');
     let acertou = false;
 
@@ -132,7 +133,7 @@ function verificarAcerto(coluna) {
         const distancia = Math.abs(top - zonaDeAcerto);
 
         // TODO: distancia variar dependendo da dificuldade.
-        if (distancia <= 30) {
+        if (distancia <= 45) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/300.png";
@@ -141,7 +142,7 @@ function verificarAcerto(coluna) {
             //pontuacaoTotal += acertosQtd[5] * 320;
             hitsQtdTotal++;
             break;
-        } else if (distancia <= 40) {
+        } else if (distancia <= 55) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/300.png";
@@ -150,7 +151,7 @@ function verificarAcerto(coluna) {
             //pontuacaoTotal += acertosQtd[4] * 300;
             hitsQtdTotal++;
             break;
-        } else if (distancia <= 55) {
+        } else if (distancia <= 70) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/200.png";
@@ -159,7 +160,7 @@ function verificarAcerto(coluna) {
             //pontuacaoTotal += acertosQtd[3] * 200;
             hitsQtdTotal++;
             break;
-        } else if (distancia <= 72) {
+        } else if (distancia <= 87) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/100.png";
@@ -168,7 +169,7 @@ function verificarAcerto(coluna) {
             //pontuacaoTotal += acertosQtd[2] * 100;
             hitsQtdTotal++;
             break;
-        } else if (distancia <= 90) {
+        } else if (distancia <= 105) {
             acertou = true;
             combo++;
             hitImage.src = "./assets/skin/50.png";
@@ -224,7 +225,7 @@ function spawnarBeatLine() {
         bottom -= velocidade;
         beatline.style.bottom = bottom + 'px';
     
-        if (bottom > topMax) {
+        if (bottom > playfieldHeight) {
             beatline.remove();
             console.log("foi");
             return;
@@ -236,32 +237,42 @@ function spawnarBeatLine() {
 }
 
 function spawnNota(coluna, notaInfo) {
+    let tamanhoLN = 0;
     const nota = document.createElement('div');
     nota.classList.add('nota');
     if (notaInfo.tecla === 's' || notaInfo.tecla === 'k') nota.classList.add('nota1'); // dar uma cor diferente
     if (notaInfo.tipo === 'slider') {
-        const duracao = (notaInfo.duracao - notaInfo.tempoOriginal) * scrollVelocity;
-
-        // const sliderSize = Math.round((duracao / preempt) * topMax);
-        nota.style.height = `${duracao}px`;
-        nota.style.top = `0px`;
+        tamanhoLN = (notaInfo.duracao - notaInfo.tempoOriginal) * scrollVelocity;
+        // const sliderSize = Math.round((duracao / preempt) * playfieldHeight);
+        nota.style.height = `${tamanhoLN}px`;
+        nota.style.marginTop = `${-tamanhoLN}px`;
     } else {
         nota.style.top = `0px`;
     }
 
     coluna.appendChild(nota);
-    const spawnTime = notaInfo.tempo - preempt;
+    const spawnTime = notaInfo.tempo;
 
     let top = 0;
     function mover() {
         if (gamePause) return;
-        top += velocidade;
-        nota.style.top = `${top}px`;
-
-        if (top > topMax) {
-            nota.remove();
-            return;
+        const tempoAtual = getTempoAtual();
+        const tempoRestante = tempoAtual - spawnTime;
+        const progresso = tempoRestante / preempt;  // 0→1
+        if (progresso < 0) {
+          // ainda não chegou a hora de aparecer
+          requestAnimationFrame(mover);
+          return;
         }
+        // passou da hora
+        if (progresso >= 1) {
+          nota.remove();
+          return;
+        }
+        // posição em px, 0 no topo → topMax no hit zone
+        const top = progresso * playfieldHeight;
+        nota.style.top = `${top}px`;
+        
         requestAnimationFrame(mover);
     }
     requestAnimationFrame(mover);
@@ -269,6 +280,7 @@ function spawnNota(coluna, notaInfo) {
 
 function gameLoop(timestamp) {
     if (gamePause) return;
+    lastTime = timestamp;
 
     const tempoAtual = getTempoAtual(); // em ms
 
@@ -290,11 +302,14 @@ async function iniciarJogo() {
         menu.style.display = 'none';
     }, 600);
     game.classList.add('ativo');
+
     await carregarMusica('./musica.mp3');
     tocarMusica();
-    comboDiv.innerHTML = combo;
 
-    startTime = Math.round(performance.now());
+    comboDiv.innerHTML = combo;
+    accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
+
+    startTime = performance.now();
 
     notasParaSpawnar = mapa.map(nota => {
         const tempoAjustado = nota.tempo - preempt;
@@ -305,7 +320,7 @@ async function iniciarJogo() {
     //     const coluna = document.querySelector(`.column[data-key="${nota.tecla}"]`);
     //     // Transformando o tempo em que a nota deve ser hitada no tempo em que ela aparece na tela.
     //     // Toda essa equação estranha é basicameente pra calcular (em milesegundos) o tempo em que a nota demora pra sair do topo da tela até o hitbox.
-    //     nota.tempo -= (topMax / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
+    //     nota.tempo -= (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
     //     criarNota(coluna, nota.tempo, nota.tecla);
     // });
 }
