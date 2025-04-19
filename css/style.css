@@ -58,6 +58,12 @@ body {
     position: relative;
     overflow: hidden;
 }
+/* 
+    Position absolute serve pra nota não "acumular" no playfield.
+    Quando você acerta uma nota, ela deixa de existir . Mas,
+    Se você usar o relative, quando ela sumir a posição muda também no meio do jogo.
+    Não troque esse valor. Eu perdi duas noites de sono tentando resolver isso de todas as maneiras. 
+*/
 .nota {
     position: absolute;
     width: 100%;

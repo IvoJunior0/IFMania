@@ -1,3 +1,9 @@
+/**
+ * Esse código tá um caos.
+ * Uma outra hora eu organizo ele e deixo cometado.
+ * Por enquanto, quero fazer ele ser minimamente funcional.
+ */
+
 // Lidando com o audio e efeitos sonoros
 let audioContext;
 let audioBuffer;
@@ -51,7 +57,7 @@ function parseMapa(str) {
     });
 }
 // FIXME: Esse é só o de Helix, dps criar outros arquivos com as notas e os ms de cada nota.
-const mapaStr = "2745|1,3431|0,4117|2,4803|3,5488|1,6174|2,6860|0,7546|0,7888|2,8060|1,8231|3,8574|2,8917|0,9260|1,9603|2,9946|3,10288|1,10631|0,10974|1,11146|2,11317|1,11488|2,11660|3,11831|0,12003|3,12174|0,12346|2,12517|3,12688|1,12860|2,13031|0|s:13374,13717|1,14060|3,14403|0,14746|2,15088|3,15431|0,15774|2,16117|1,16460|0,16803|3,17146|1,17488|2,17831|3,18174|0,18517|3,18860|1,19031|2,19203|3,19546|0,19888|2,20231|1,20574|3,20917|2,21603|0,21946|3,22288|2,22631|1,22974|2,23317|0,23660|3,24003|0,24346|2,24688|2,25031|0,25374|1,25717|3,26060|2,26231|1,26403|2,26574|1,26746|3,26917|0,27088|3,27260|0,27431|2,27774|1,27946|2,28288|0,28460|2,28803|0,28974|1,29146|3,29317|2,29488|1,29660|0,29831|3,30003|2";
+const mapaStr = "2745|1,3431|0,4117|2,4803|3,5488|1,6174|2,6860|0,7546|0,7888|2,8060|1,8231|3,8574|2,8917|0,9260|1,9603|2,9946|3,10288|1,10631|0,10974|1,11146|2,11317|1,11488|2,11660|3,11831|0,12003|3,12174|0,12346|2,12517|3,12688|1,12860|2,13031|0|s:13374,13374|3,13717|1,14060|3,14403|0,14746|2,15088|3,15431|0,15774|2,16117|1,16460|0,16803|3,17146|1,17488|2,17831|3,18174|0,18517|3,18860|1,19031|2,19203|3,19546|0,19888|2,20231|1,20574|3,20917|2,21603|0,21946|3,22288|2,22631|1,22974|2,23317|0,23660|3,24003|0,24346|2,24688|2,25031|0,25374|1,25717|3,26060|2,26231|1,26403|2,26574|1,26746|3,26917|0,27088|3,27260|0,27431|2,27774|1,27946|2,28288|0,28460|2,28803|0,28974|1,29146|3,29317|2,29488|1,29660|0,29831|3,30003|2,30174|1|s:30860,30860|3|s:31584";
 const mapa = parseMapa(mapaStr);
 
 // Elementos do HTML.
@@ -85,17 +91,18 @@ const offset = 2746;
 const beatmapTotalTime = 141133;
 const bpm = 175;
 
-// Menor valor que a nota pode chegar
 const playfieldHeight = 600;
 const intervaloAnimacaoNota = 16;
 
-const preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
+let preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
 const scrollVelocity = playfieldHeight / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim
 
 function getTempoAtual() {
     return (audioContext.currentTime * 1000) - startTimeAudio;
 }
 
+// Funções antigas do código.
+// Não são utilizadas, mas continuam aqui para referência.
 function criarNota(coluna, tempoAparecimento, tecla) {
     setTimeout(() => {
         const nota = document.createElement('div');
@@ -238,11 +245,13 @@ function spawnarBeatLine() {
 
 function spawnNota(coluna, notaInfo) {
     let tamanhoLN = 0;
+    let tempoLN = 0;
     const nota = document.createElement('div');
     nota.classList.add('nota');
     if (notaInfo.tecla === 's' || notaInfo.tecla === 'k') nota.classList.add('nota1'); // dar uma cor diferente
     if (notaInfo.tipo === 'slider') {
-        tamanhoLN = (notaInfo.duracao - notaInfo.tempoOriginal) * scrollVelocity;
+        tempoLN = notaInfo.duracao - notaInfo.tempoOriginal
+        tamanhoLN = tempoLN * scrollVelocity;
         // const sliderSize = Math.round((duracao / preempt) * playfieldHeight);
         nota.style.height = `${tamanhoLN}px`;
         nota.style.marginTop = `${-tamanhoLN}px`;
@@ -258,7 +267,7 @@ function spawnNota(coluna, notaInfo) {
         if (gamePause) return;
         const tempoAtual = getTempoAtual();
         const tempoRestante = tempoAtual - spawnTime;
-        const progresso = tempoRestante / preempt;  // 0→1
+        const progresso = tempoRestante / (preempt+tempoLN);  // 0→1
         if (progresso < 0) {
           // ainda não chegou a hora de aparecer
           requestAnimationFrame(mover);
@@ -270,7 +279,7 @@ function spawnNota(coluna, notaInfo) {
           return;
         }
         // posição em px, 0 no topo → topMax no hit zone
-        const top = progresso * playfieldHeight;
+        const top = progresso * (playfieldHeight + tamanhoLN);
         nota.style.top = `${top}px`;
         
         requestAnimationFrame(mover);
@@ -313,6 +322,10 @@ async function iniciarJogo() {
 
     notasParaSpawnar = mapa.map(nota => {
         const tempoAjustado = nota.tempo - preempt;
+        /**
+         *  tempo -> Tempo (em ms) que a nota deve aparecer na tela.
+         *  tempoOriginal -> Tempo (em ms) em que a nota deve ser pressionada.
+         */
         return { ...nota, tempo: tempoAjustado, criada: false, tempoOriginal: nota.tempo };
     });
     requestAnimationFrame(gameLoop);
