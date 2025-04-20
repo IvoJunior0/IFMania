@@ -9,6 +9,7 @@
 </head>
 <body>
     <div id="menu">
+        <img src="./assets/bm.png" alt="">
         <h1>🎵 Bem-vindo ao Jogo!</h1>
         <p>Aperte <strong>Enter</strong> para começar</p>
     </div>
@@ -16,7 +17,10 @@
         <h2>IFMania</h2>
         <p>Use as teclas <strong>A S K L</strong> para acertar as notas!</p>
     </div>
-    <div id="acc">100.00%</div>
+    <div id="score">
+        <div id="pontuacao"></div>
+        <div id="acc"></div>
+    </div>
     <div id="menu-pause">
         <h1>O jogo está pausado</h1>
     </div>
@@ -33,6 +37,6 @@
         <div id="beatline"></div>
         <div id="hit-zone"></div>
     </div>
-    <script src="./js/game.js"></script>
+    <script type="module" src="./js/game.js"></script>
 </body>
 </html>

@@ -38,6 +38,9 @@ body {
 #menu-pause {
     display: none;
 }
+#menu img {
+    max-width: 200px;
+}
 #game {
     position: relative;
     width: 400px;
@@ -127,11 +130,16 @@ body {
     background: gray;
     z-index: 0;
 }
-#acc {
+#score {
+    font-family: 'Yugen';
     position: absolute;
     top:30px;
     right: 40px;
     font-size: 1.5rem;
+    text-align: right;
+}
+#pontuacao {
+    font-size: 2rem;
 }
 
 /* .feedback {
