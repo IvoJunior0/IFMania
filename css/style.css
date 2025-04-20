@@ -2,7 +2,8 @@
     font-family: 'Yugen';
     src: url("../assets/fonts/Hyperspace\ Bold.otf");
 }
-*, 
+
+*,
 *:after,
 *:before {
     margin: 0;
@@ -18,6 +19,7 @@ body {
     font-family: sans-serif;
     text-align: center;
 }
+
 #menu {
     position: absolute;
     top: 0;
@@ -31,16 +33,20 @@ body {
     flex-direction: column;
     z-index: 12;
 }
+
 #menu h1 {
     font-size: 2rem;
     margin-bottom: 20px;
 }
+
 #menu-pause {
     display: none;
 }
+
 #menu img {
     max-width: 200px;
 }
+
 #game {
     position: relative;
     width: 400px;
@@ -52,15 +58,18 @@ body {
     opacity: 0.3;
     transition: opacity 0.5s ease;
 }
+
 #game.ativo {
     opacity: 1;
 }
+
 .column {
     flex: 1;
     border-left: 1px solid black;
     position: relative;
     overflow: hidden;
 }
+
 /* 
     Position absolute serve pra nota não "acumular" no playfield.
     Quando você acerta uma nota, ela deixa de existir . Mas,
@@ -76,9 +85,11 @@ body {
     border: 3px solid red;
     z-index: 1;
 }
-.nota1{
+
+.nota1 {
     background: cyan;
 }
+
 #hit-zone {
     position: absolute;
     bottom: 60px;
@@ -88,6 +99,7 @@ body {
     background: red;
     z-index: 1;
 }
+
 .transition {
     visibility: hidden;
     opacity: 0;
@@ -95,10 +107,17 @@ body {
     animation: deblur;
     animation-duration: .6s;
 }
+
 @keyframes deblur {
-    0% { filter: blur(0); }
-    100% { filter: blur(7px);}
+    0% {
+        filter: blur(0);
+    }
+
+    100% {
+        filter: blur(7px);
+    }
 }
+
 #top-mask {
     position: absolute;
     top: 0;
@@ -109,6 +128,7 @@ body {
     pointer-events: none;
     background: linear-gradient(to bottom, #111 80%, transparent);
 }
+
 #combo {
     position: absolute;
     top: 110px;
@@ -117,12 +137,14 @@ body {
     font-family: 'Yugen';
     font-size: 2.5rem;
 }
+
 #hit {
     position: absolute;
     top: 150px;
     width: 100%;
     z-index: 5;
 }
+
 #beatline {
     position: absolute;
     width: 100%;
@@ -130,16 +152,26 @@ body {
     background: gray;
     z-index: 0;
 }
+
 #score {
     font-family: 'Yugen';
     position: absolute;
-    top:30px;
+    top: 30px;
     right: 40px;
     font-size: 1.5rem;
     text-align: right;
 }
+
 #pontuacao {
     font-size: 2rem;
+}
+.push{
+    animation: pulse 0.2s linear 1;
+}
+@keyframes push {
+    50% {
+        transform: scale(0.8);
+    }
 }
 
 /* .feedback {

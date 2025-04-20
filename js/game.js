@@ -24,7 +24,7 @@ function tocarMusica() {
     audioSource = audioContext.createBufferSource();
     audioSource.buffer = audioBuffer;
     audioSource.connect(audioContext.destination);
-    
+
     startTimeAudio = audioContext.currentTime * 1000; // tempo em milissegundos
     audioSource.start(0);
 }
@@ -98,17 +98,33 @@ let nextNote = {};
 
 const playfieldHeight = 600;
 const intervaloAnimacaoNota = 16;
-let keyStates = []; // Salvar quais teclas estão sendo pressionadas
+const playfields = {
+    "a": document.getElementById("playfield-a"),
+    "s": document.getElementById("playfield-s"),
+    "k": document.getElementById("playfield-k"),
+    "l": document.getElementById("playfield-l")
+};
+
+const keyStates = {
+    "a": false,
+    "s": false,
+    "k": false,
+    "l": false
+};
 
 let preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
-const scrollVelocity = playfieldHeight / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim
+const scrollVelocity = playfieldHeight / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim.
+
+function formatarScore(score) {
+    return String(score).padStart(8, '0');
+}
 
 function getTempoAtual() {
     return (audioContext.currentTime * 1000) - startTimeAudio;
 }
 
 function verificarAcerto(coluna) {
-    if (getTempoAtual() < offset-200) {return;}
+    if (getTempoAtual() < offset - 200) { return; }
     const notas = coluna.querySelectorAll('.nota');
     let acertou = false;
 
@@ -125,7 +141,7 @@ function verificarAcerto(coluna) {
             acertosQtd[5]++;
             //pontuacaoTotal += acertosQtd[5] * 320;
             hitsQtdTotal++;
-            score+=320;
+            score += 320;
             break;
         } else if (distancia <= 55) {
             acertou = true;
@@ -135,7 +151,7 @@ function verificarAcerto(coluna) {
             acertosQtd[4]++;
             //pontuacaoTotal += acertosQtd[4] * 300;
             hitsQtdTotal++;
-            score+=300;
+            score += 300;
             break;
         } else if (distancia <= 70) {
             acertou = true;
@@ -145,7 +161,7 @@ function verificarAcerto(coluna) {
             acertosQtd[3]++;
             //pontuacaoTotal += acertosQtd[3] * 200;
             hitsQtdTotal++;
-            score+=200;
+            score += 200;
             break;
         } else if (distancia <= 87) {
             acertou = true;
@@ -155,7 +171,7 @@ function verificarAcerto(coluna) {
             acertosQtd[2]++;
             //pontuacaoTotal += acertosQtd[2] * 100;
             hitsQtdTotal++;
-            score+=100;
+            score += 100;
             break;
         } else if (distancia <= 105) {
             acertou = true;
@@ -165,7 +181,7 @@ function verificarAcerto(coluna) {
             acertosQtd[1]++;
             //pontuacaoTotal += acertosQtd[1] * 50;
             hitsQtdTotal++;
-            score+=50;
+            score += 50;
             break;
         }
     }
@@ -182,7 +198,7 @@ function verificarAcerto(coluna) {
 
     comboDiv.innerHTML = combo;
     accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
-    scoreDiv.innerHTML = score;
+    scoreDiv.innerHTML = formatarScore(score);
 }
 
 //TODO: fzr isso funcionar dps
@@ -201,8 +217,17 @@ document.addEventListener('keydown', (e) => {
         pausarGame();
     } else {
         const coluna = document.querySelector(`.column[data-key="${tecla}"]`);
-        if (coluna) { verificarAcerto(coluna); }
+        if (coluna && !keyStates[tecla]) {
+            keyStates[tecla] = true;
+            verificarAcerto(coluna); 
+            console.log(keyStates);
+        }
     }
+});
+document.addEventListener('keyup', (e) => {
+    const tecla = e.key.toLowerCase();
+    keyStates[tecla] = false;
+    console.log(keyStates);
 });
 
 function spawnarBeatLine() {
@@ -211,13 +236,13 @@ function spawnarBeatLine() {
         if (gamePause) return;
         bottom -= velocidade;
         beatline.style.bottom = bottom + 'px';
-    
+
         if (bottom > playfieldHeight) {
             beatline.remove();
             console.log("foi");
             return;
         }
-    
+
         requestAnimationFrame(animarBeatline);
     }
     requestAnimationFrame(animarBeatline);
@@ -247,21 +272,21 @@ function spawnNota(coluna, notaInfo) {
         if (gamePause) return;
         const tempoAtual = getTempoAtual();
         const tempoRestante = tempoAtual - spawnTime;
-        const progresso = tempoRestante / (preempt+tempoLN);  // 0→1
+        const progresso = tempoRestante / (preempt + tempoLN);  // 0→1
         if (progresso < 0) {
-          // ainda não chegou a hora de aparecer
-          requestAnimationFrame(mover);
-          return;
+            // ainda não chegou a hora de aparecer
+            requestAnimationFrame(mover);
+            return;
         }
         // passou da hora
         if (progresso >= 1) {
-          nota.remove();
-          return;
+            nota.remove();
+            return;
         }
         // posição em px, 0 no topo → topMax no hit zone
         const top = progresso * (playfieldHeight + tamanhoLN);
         nota.style.top = `${top}px`;
-        
+
         requestAnimationFrame(mover);
     }
     requestAnimationFrame(mover);
@@ -294,7 +319,7 @@ async function iniciarJogo() {
     await carregarMusica('./musica.mp3');
     tocarMusica();
 
-    scoreDiv.innerHTML = score;
+    scoreDiv.innerHTML = formatarScore(score);
     comboDiv.innerHTML = combo;
     accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
 
