@@ -72,7 +72,7 @@ const beatline = document.getElementById('beatline');
 // TEMPO: 686ms
 // Variáveis principais e importantes (e algumas outras nem tanto).
 const velocidade = 20;
-const zonaDeAcerto = 540;
+const zonaDeAcerto = 520;
 let gameStarted = false;
 let gamePause = false;
 
@@ -328,6 +328,11 @@ async function iniciarJogo() {
     });
 }
 
+/**
+ * Easter egg que aparece no console.
+ * Tem alguns links de contato de alguns efeitos no texto usando css básico.
+ * Essa arte do Badtz Maru foi feita usando ASCII ART.
+ */
 console.log(
     `%c
                    @@@@          @@@@             

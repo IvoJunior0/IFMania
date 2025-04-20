@@ -82,7 +82,6 @@ body {
     height: 50px;
     background: white;
     top: 0;
-    border: 3px solid red;
     z-index: 1;
 }
 
@@ -92,14 +91,16 @@ body {
 
 #hit-zone {
     position: absolute;
-    bottom: 60px;
+    bottom: 40px;
     left: 0;
     width: 100%;
-    height: 5px;
-    background: red;
+    /* height: 5px;
+    background: red; */
     z-index: 1;
 }
-
+#hit-zone img {
+    width: 100%;
+}
 .transition {
     visibility: hidden;
     opacity: 0;
