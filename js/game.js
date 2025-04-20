@@ -92,9 +92,9 @@ let notasParaSpawnar = [];
 // Variaveis sobre o mapa
 // TODO: quando tiver mais mapas, trocar isso por algo definitivamente melhor e menos preguiçoso.
 const offset = 2746;
-const beatmapTotalTime = 141133;
+const durationMs = 141133;
 const bpm = 175;
-let nextNote = {};
+const beatInterval = 60000 / bpm;
 
 const playfieldHeight = 600;
 const intervaloAnimacaoNota = 16;
@@ -106,10 +106,10 @@ const playfields = {
 };
 
 const keyStates = {
-    "a": false,
-    "s": false,
-    "k": false,
-    "l": false
+    "a": [false, "tipo"],
+    "s": [false, "tipo"],
+    "k": [false, "tipo"],
+    "l": [false, "tipo"]
 };
 
 let preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
@@ -123,7 +123,7 @@ function getTempoAtual() {
     return (audioContext.currentTime * 1000) - startTimeAudio;
 }
 
-function verificarAcerto(coluna) {
+function verificarAcerto(coluna, tecla) {
     if (getTempoAtual() < offset - 200) { return; }
     const notas = coluna.querySelectorAll('.nota');
     let acertou = false;
@@ -131,59 +131,59 @@ function verificarAcerto(coluna) {
     for (let nota of notas) {
         const top = parseInt(nota.style.top);
         const distancia = Math.abs(top - zonaDeAcerto);
-        const rangeHit = getTempoAtual() - startTimeAudio;
-        // TODO: distancia variar dependendo da dificuldade.
-        if (distancia <= 45) {
-            acertou = true;
-            combo++;
-            hitImage.src = "";
-            nota.remove();
-            acertosQtd[5]++;
-            //pontuacaoTotal += acertosQtd[5] * 320;
-            hitsQtdTotal++;
-            score += 320;
-            break;
-        } else if (distancia <= 55) {
-            acertou = true;
-            combo++;
-            hitImage.src = "./assets/skin/300.png";
-            nota.remove();
-            acertosQtd[4]++;
-            //pontuacaoTotal += acertosQtd[4] * 300;
-            hitsQtdTotal++;
-            score += 300;
-            break;
-        } else if (distancia <= 70) {
-            acertou = true;
-            combo++;
-            hitImage.src = "./assets/skin/200.png";
-            nota.remove();
-            acertosQtd[3]++;
-            //pontuacaoTotal += acertosQtd[3] * 200;
-            hitsQtdTotal++;
-            score += 200;
-            break;
-        } else if (distancia <= 87) {
-            acertou = true;
-            combo++;
-            hitImage.src = "./assets/skin/100.png";
-            nota.remove();
-            acertosQtd[2]++;
-            //pontuacaoTotal += acertosQtd[2] * 100;
-            hitsQtdTotal++;
-            score += 100;
-            break;
-        } else if (distancia <= 105) {
-            acertou = true;
-            combo++;
-            hitImage.src = "./assets/skin/50.png";
-            nota.remove();
-            acertosQtd[1]++;
-            //pontuacaoTotal += acertosQtd[1] * 50;
-            hitsQtdTotal++;
-            score += 50;
-            break;
-        }
+        if (keyStates[tecla][1])
+            // TODO: distancia variar dependendo da dificuldade.
+            if (distancia <= 45) {
+                acertou = true;
+                combo++;
+                hitImage.src = "";
+                nota.remove();
+                acertosQtd[5]++;
+                //pontuacaoTotal += acertosQtd[5] * 320;
+                hitsQtdTotal++;
+                score += 320;
+                break;
+            } else if (distancia <= 55) {
+                acertou = true;
+                combo++;
+                hitImage.src = "./assets/skin/300.png";
+                nota.remove();
+                acertosQtd[4]++;
+                //pontuacaoTotal += acertosQtd[4] * 300;
+                hitsQtdTotal++;
+                score += 300;
+                break;
+            } else if (distancia <= 70) {
+                acertou = true;
+                combo++;
+                hitImage.src = "./assets/skin/200.png";
+                nota.remove();
+                acertosQtd[3]++;
+                //pontuacaoTotal += acertosQtd[3] * 200;
+                hitsQtdTotal++;
+                score += 200;
+                break;
+            } else if (distancia <= 87) {
+                acertou = true;
+                combo++;
+                hitImage.src = "./assets/skin/100.png";
+                nota.remove();
+                acertosQtd[2]++;
+                //pontuacaoTotal += acertosQtd[2] * 100;
+                hitsQtdTotal++;
+                score += 100;
+                break;
+            } else if (distancia <= 105) {
+                acertou = true;
+                combo++;
+                hitImage.src = "./assets/skin/50.png";
+                nota.remove();
+                acertosQtd[1]++;
+                //pontuacaoTotal += acertosQtd[1] * 50;
+                hitsQtdTotal++;
+                score += 50;
+                break;
+            }
     }
 
     if (!acertou) {
@@ -210,6 +210,7 @@ function pausarGame() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && menu.style.display !== 'none' && !gameStarted) {
         iniciarJogo();
+        return;
     }
     // tocarSom();
     const tecla = e.key.toLowerCase();
@@ -217,35 +218,24 @@ document.addEventListener('keydown', (e) => {
         pausarGame();
     } else {
         const coluna = document.querySelector(`.column[data-key="${tecla}"]`);
-        if (coluna && !keyStates[tecla]) {
-            keyStates[tecla] = true;
-            verificarAcerto(coluna); 
-            console.log(keyStates);
+        if (coluna && !keyStates[tecla][0]) {
+            keyStates[tecla][0] = true;
+            verificarAcerto(coluna, tecla);
+            // console.log(keyStates[tecla]);
         }
     }
 });
 document.addEventListener('keyup', (e) => {
     const tecla = e.key.toLowerCase();
-    keyStates[tecla] = false;
-    console.log(keyStates);
+    if (keyStates[tecla] && gameStarted) {
+        keyStates[tecla][0] = false;
+        // console.log(keyStates[tecla]);
+    }
 });
 
 function spawnarBeatLine() {
-    let bottom = 0;
-    function animarBeatline() {
-        if (gamePause) return;
-        bottom -= velocidade;
-        beatline.style.bottom = bottom + 'px';
-
-        if (bottom > playfieldHeight) {
-            beatline.remove();
-            console.log("foi");
-            return;
-        }
-
-        requestAnimationFrame(animarBeatline);
-    }
-    requestAnimationFrame(animarBeatline);
+    const totalBeats = Math.floor(durationMs / beatInterval);
+    console.log(totalBeats);
 }
 
 function spawnNota(coluna, notaInfo) {
@@ -257,7 +247,6 @@ function spawnNota(coluna, notaInfo) {
     if (notaInfo.tipo === 'slider') {
         tempoLN = notaInfo.duracao - notaInfo.tempoOriginal
         tamanhoLN = tempoLN * scrollVelocity;
-        // const sliderSize = Math.round((duracao / preempt) * playfieldHeight);
         nota.style.height = `${tamanhoLN}px`;
         nota.style.marginTop = `${-tamanhoLN}px`;
     } else {
@@ -286,6 +275,7 @@ function spawnNota(coluna, notaInfo) {
         // posição em px, 0 no topo → topMax no hit zone
         const top = progresso * (playfieldHeight + tamanhoLN);
         nota.style.top = `${top}px`;
+        keyStates[notaInfo.tecla][1] = notaInfo.tipo;
 
         requestAnimationFrame(mover);
     }
@@ -316,22 +306,69 @@ async function iniciarJogo() {
     }, 600);
     game.classList.add('ativo');
 
-    await carregarMusica('./musica.mp3');
-    tocarMusica();
-
-    scoreDiv.innerHTML = formatarScore(score);
-    comboDiv.innerHTML = combo;
-    accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
-
-    startTime = performance.now();
-
-    notasParaSpawnar = mapa.map(nota => {
-        const tempoAjustado = nota.tempo - preempt;
-        /**
-         *  tempo -> Tempo (em ms) que a nota deve aparecer na tela.
-         *  tempoOriginal -> Tempo (em ms) em que a nota deve ser pressionada.
-         */
-        return { ...nota, tempo: tempoAjustado, criada: false, tempoOriginal: nota.tempo };
+    carregarMusica('./musica.mp3').then(() => {
+        tocarMusica();
+    
+        scoreDiv.innerHTML = formatarScore(score);
+        comboDiv.innerHTML = combo;
+        accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
+    
+        startTime = performance.now();
+    
+        notasParaSpawnar = mapa.map(nota => {
+            const tempoAjustado = nota.tempo - preempt;
+            /**
+             *  tempo -> Tempo (em ms) que a nota deve aparecer na tela.
+             *  tempoOriginal -> Tempo (em ms) em que a nota deve ser pressionada.
+             */
+            return { ...nota, tempo: tempoAjustado, criada: false, tempoOriginal: nota.tempo };
+        });
+        spawnarBeatLine();
+        requestAnimationFrame(gameLoop);
     });
-    requestAnimationFrame(gameLoop);
 }
+
+console.log(
+    `%c
+                   @@@@          @@@@             
+                 @@@@@@@      @@@@@@@             
+                @@@@@@@@@    @@@@@@@@             
+    @@@@@@@     @@@@@@@@@  @@@@@@@@@@   @@@@@@@   
+    @@@@@@@@@  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   
+     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   
+     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    
+      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@    
+      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
+       @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@      
+      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
+      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
+     @@@@       @@@    @@@@    @@@       @@@@@    
+     @@@               @@@@               @@@@    
+     @@@               @@@@              @@@@@    
+     @@@@              @@@@              @@@@@    
+     @@@@@           @@@@@@@@          @@@@@@     
+      @@@@@@      @@@@      @@@@@   @@@@@@@@       
+       @@@@@@@@@@@@@         @@@@@@@@@@@@@@       
+        @@@@@@@@@@@@         @@@@@@@@@@@@@         
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@         
+     @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
+   @@@@@@@@@@@@@@@@@@@@@    @@@@@@@@@@@@@@@@@@@    
+  @@@@@@@@@@@@@@@@@@            @@@@@@@@@@@@@@@@   
+                                                                                         
+ __     __        _            __  __             _       
+\\ \\   / /__ _ __| |_ _____  _|  \\/  | __ _ _ __ (_) __ _ 
+ \\ \\ / / _ \\ '__| __/ _ \\ \\/ / |\\/| |/ _\` | '_ \\| |/ _\` |
+  \\ V /  __/ |  | ||  __/>  <| |  | | (_| | | | | | (_| |
+   \\_/ \\___|_|   \\__\\___/_/\\_\\_|  |_|\__,_|_| |_|_|\\__,_|\n`,
+    "font-family: monospace; background: linear-gradient(90deg, #ff00cc, #3333ff);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-weight: bold;"
+);
+console.log(`%cOlá, é um prazer encontrar-lo por aqui, entuasiasta de HTML!
+
+Este projeto foi criado apenas por diversão e para fazer alguns testes — nada muito sério por enquanto (eu acho).
+MAAAAS... se você curtiu e quer trocar uma ideia ou acompanhar meus outros trabalhos, aqui estão meus links:
+
+😺: https://github.com/IvoJunior0
+🧑‍💼: https://www.linkedin.com/in/ivo-junior-a934a8312/
+📸: https://www.instagram.com/ivo_jr.s/
+
+Valeu por passar aqui! 👌`, "color: green");
