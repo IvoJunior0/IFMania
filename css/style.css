@@ -69,7 +69,6 @@ body {
     position: relative;
     overflow: hidden;
 }
-
 /* 
     Position absolute serve pra nota não "acumular" no playfield.
     Quando você acerta uma nota, ela deixa de existir . Mas,
@@ -145,7 +144,6 @@ body {
     width: 100%;
     z-index: 5;
 }
-
 #beatline {
     position: absolute;
     width: 100%;
