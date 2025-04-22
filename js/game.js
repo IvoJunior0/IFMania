@@ -380,7 +380,8 @@ async function iniciarJogo(musica, dificuldade) {
 
     carregarMusica(`./maps/${musica.title}/song.mp3`).then(() => {
         tocarMusica();
-        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./maps/${musica.title}/bg.jpg)`;
+        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./maps/${encodeURIComponent(musica.title)}/bg.jpg)`;
+        console.log(musica.title)
 
         scoreDiv.innerHTML = formatarScore(score);
         comboDiv.innerHTML = combo;
