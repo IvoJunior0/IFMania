@@ -90,10 +90,12 @@ const accuracyDiv = document.getElementById('acc');
 const scoreDiv = document.getElementById('pontuacao');
 const beatline = document.getElementById('beatline');
 
+// Esse slider é do formulário, não o slider long note.
+const slider = document.getElementById("slider");
+const valor = document.getElementById("valorSlider");
+
 // TEMPO: 686ms
 // Variáveis principais e importantes (e algumas outras nem tanto).
-const velocidade = 20;
-const zonaDeAcerto = 520;
 let gameStarted = false;
 let gamePause = false;
 
@@ -109,6 +111,7 @@ let pp = null;
 
 let startTime = null;
 let notasParaSpawnar = [];
+const DELAY_INICIO_MS = 1750;
 
 // Variaveis sobre o mapa
 // TODO: quando tiver mais mapas, trocar isso por algo definitivamente melhor e menos preguiçoso.
@@ -119,6 +122,8 @@ const beatInterval = 60000 / bpm;
 
 const playfieldHeight = game.offsetHeight;
 const intervaloAnimacaoNota = 16;
+const zonaDeAcerto = playfieldHeight - 90;
+
 const playfields = {
     "a": document.getElementById("playfield-a"),
     "s": document.getElementById("playfield-s"),
@@ -139,8 +144,16 @@ const keyStates = {
     "l": [false, "tipo", 0, 0, false]
 };
 
-let preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
-const scrollVelocity = playfieldHeight / 686 // 686 é o tempo em ms que a nota sai do começo e vai até o fim.
+let scrollVelocity = 0.94;
+// Não me perguntem porque isso funciona não porque tem essa equação maluca.
+// Ela funciona e isso importa
+let preempt = (playfieldHeight / (scrollVelocity * (1000/47))) * (intervaloAnimacaoNota / 1000) * 1000;
+
+slider.addEventListener("input", () => {
+    valor.textContent = slider.value;
+    scrollVelocity = slider.value;
+    preempt = (playfieldHeight / (scrollVelocity * (1000/47))) * (intervaloAnimacaoNota / 1000) * 1000;
+});
 
 function formatarScore(score) {
     return String(score).padStart(8, '0');
@@ -182,7 +195,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 320;
                 break;
-            } else if (distancia <= 55) {
+            } else if (distancia <= 60) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -193,7 +206,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 300;
                 break;
-            } else if (distancia <= 70) {
+            } else if (distancia <= 75) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -204,7 +217,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 200;
                 break;
-            } else if (distancia <= 87) {
+            } else if (distancia <= 90) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -215,7 +228,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 100;
                 break;
-            } else if (distancia <= 105) {
+            } else if (distancia <= 125) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -315,10 +328,10 @@ function spawnNota(coluna, notaInfo) {
         const tempoRestante = tempoAtual - spawnTime;
         const progresso = tempoRestante / (preempt + tempoLN);  // 0→1
         // Antes do tempo de hitar a nota.
-        if (progresso < 0) {
-            requestAnimationFrame(mover);
-            return;
-        }
+        // if (progresso < 0) {
+        //     requestAnimationFrame(mover);
+        //     return;
+        // }
         // Depois do tempo de hitar a nota.
         if (progresso >= 1) {
             if (!nota.classList.contains('acertada')) {  // Se a nota não foi acertada
@@ -373,13 +386,12 @@ async function iniciarJogo(musica, dificuldade) {
 
     // Importando as notas da dificuldade.
     fetch(`./maps/${musica.title}/${musica.artist} - ${musica.title} (${musica.creator}) [${dificuldade}].osu`)
-    .then(res => res.text())
-    .then(osuText => {
-        mapa = parseOsuFile(osuText, 4); // 4 lanes 
-    });
+        .then(res => res.text())
+        .then(osuText => {
+            mapa = parseOsuFile(osuText, 4); // 4 lanes 
+        });
 
     carregarMusica(`./maps/${musica.title}/song.mp3`).then(() => {
-        tocarMusica();
         document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./maps/${encodeURIComponent(musica.title)}/bg.jpg)`;
         console.log(musica.title)
 
@@ -393,14 +405,21 @@ async function iniciarJogo(musica, dificuldade) {
 
         notasParaSpawnar = mapa.map(nota => {
             const tempoAjustado = nota.tempo - preempt;
+            console.log(tempoAjustado)
             /**
              *  tempo -> Tempo (em ms) que a nota deve aparecer na tela.
              *  tempoOriginal -> Tempo (em ms) em que a nota deve ser pressionada.
-             */
+            */
             return { ...nota, tempo: tempoAjustado, criada: false, tempoOriginal: nota.tempo };
         });
+        setTimeout(() => {
+            tocarMusica();
+            startTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }, DELAY_INICIO_MS);
+        //tocarMusica();
         spawnarBeatLine();
-        requestAnimationFrame(gameLoop);
+        //requestAnimationFrame(gameLoop);
     });
 }
 
@@ -411,7 +430,7 @@ const songData = [
         difficulties: ["Beginner", "Normal", "Hyper", "Another", "Black Another", "Eternal"],
         bpm: 149,
         offset: 4802,
-        creator: "Wh1teh" 
+        creator: "Wh1teh"
     },
     {
         title: "HELIX",
@@ -475,7 +494,7 @@ songData.forEach((song, index) => {
             iniciarJogo(song, diff);
         });
         diffList.appendChild(diffEl);
-      });      
+    });
 
     songEl.appendChild(diffList);
     songList.appendChild(songEl);
