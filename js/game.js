@@ -2,8 +2,10 @@
  * Esse código tá um caos.
  * Uma outra hora eu organizo ele e deixo cometado.
  * Por enquanto, quero fazer ele ser minimamente funcional.
+ * 
+ * OBS: em momentos do código quando for dito slider, ln ou hold notes,
+ * se refere a mesma coisa.
  */
-
 // Lidando com o audio e efeitos sonoros
 let audioContext;
 let audioBuffer;
@@ -78,12 +80,6 @@ function parseOsuFile(osuText, totalLanes = 4) {
 }
 
 let mapa = []
-fetch(`./maps/Helix/ESTi - HELIX (xeona) [S.Star's 4K NM].osu`)
-    .then(res => res.text())
-    .then(osuText => {
-        mapa = parseOsuFile(osuText, 4); // 4 lanes 
-    });
-
 
 // Elementos do HTML.
 const game = document.getElementById('game');
@@ -116,9 +112,9 @@ let notasParaSpawnar = [];
 
 // Variaveis sobre o mapa
 // TODO: quando tiver mais mapas, trocar isso por algo definitivamente melhor e menos preguiçoso.
-const offset = 2746;
+let offset = 2746;
 const durationMs = 141133;
-const bpm = 175;
+let bpm = 175;
 const beatInterval = 60000 / bpm;
 
 const playfieldHeight = 600;
@@ -129,12 +125,18 @@ const playfields = {
     "k": document.getElementById("playfield-k"),
     "l": document.getElementById("playfield-l")
 };
-// Tecla, tipo da nota e o tempo dela.
+/**
+ * [0] - Estado da tecla pressionada.
+ * [1] - Tipo da tecla (normal ou slider)
+ * [2] - Hit time (em ms)
+ * [3] - End time (em ms)
+ * [4] - Se a header do slider (se for um slider) foi acertada.
+ */
 const keyStates = {
-    "a": [false, "tipo", 0],
-    "s": [false, "tipo", 0],
-    "k": [false, "tipo", 0],
-    "l": [false, "tipo", 0]
+    "a": [false, "tipo", 0, 0, false],
+    "s": [false, "tipo", 0, 0, false],
+    "k": [false, "tipo", 0, 0, false],
+    "l": [false, "tipo", 0, 0, false]
 };
 
 let preempt = (playfieldHeight / velocidade) * (intervaloAnimacaoNota / 1000) * 1000;
@@ -168,7 +170,7 @@ function verificarAcerto(coluna, tecla) {
         const distancia = Math.abs(top - zonaDeAcerto);
         if (top <= 175) considerarInput = false;
 
-        if (!nota.classList.contains('acertada')) {  // Verifica se a nota já foi acertada
+        if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'normal') {  // Verifica se a nota já foi acertada
             if (distancia <= 45) {
                 acertou = true;
                 considerarInput = true;
@@ -226,7 +228,10 @@ function verificarAcerto(coluna, tecla) {
                 break;
             }
         } else if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'slider') {
-            if (keyStates[tecla][0]) console.log(keyStates[tecla][2])
+            if (keyStates[tecla][2] <= getTempoAtual() <= keyStates[tecla][2] + 200 && keyStates[tecla][0]) {
+                keyStates[tecla][4] = true;
+                console.log("segurando")
+            }
         }
     }
 
@@ -242,6 +247,15 @@ function verificarAcerto(coluna, tecla) {
     }
 
     calcularMetricas();
+}
+
+function soltarLN(coluna, tecla) {
+    const endtime = keyStates[tecla][3];
+    if (keyStates[tecla][1] != 'slider') return;
+    if (endtime - 55 <= getTempoAtual <= endtime && keyStates[tecla][4]) {
+        console.log("300")
+        keyStates[tecla][4] = false;
+    }
 }
 
 //TODO: fzr isso funcionar dps
@@ -271,7 +285,9 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => {
     const tecla = e.key.toLowerCase();
     if (keyStates[tecla] && gameStarted) {
+        const coluna = document.querySelector(`.column[data-key="${tecla}"]`);
         keyStates[tecla][0] = false;
+        soltarLN(coluna, tecla);
         // console.log(keyStates[tecla]);
     }
 });
@@ -325,6 +341,11 @@ function spawnNota(coluna, notaInfo) {
         nota.style.top = `${top}px`;
         keyStates[notaInfo.tecla][1] = notaInfo.tipo;
         keyStates[notaInfo.tecla][2] = notaInfo.tempoOriginal;
+        if (notaInfo.tipo === 'slider') {
+            keyStates[notaInfo.tecla][3] = notaInfo.duracao;
+        } else {
+            keyStates[notaInfo.tecla][3] = notaInfo.tempoOriginal;
+        }
 
         requestAnimationFrame(mover);
     }
@@ -347,7 +368,8 @@ function gameLoop(timestamp) {
     requestAnimationFrame(gameLoop);
 }
 
-async function iniciarJogo() {
+async function iniciarJogo(musica, dificuldade) {
+    console.log(musica)
     gameStarted = true;
     menu.classList.add('transition');
     setTimeout(() => {
@@ -355,14 +377,26 @@ async function iniciarJogo() {
     }, 600);
     game.classList.add('ativo');
 
-    carregarMusica('./musica.mp3').then(() => {
+    // Importando as notas da dificuldade.
+    fetch(`./maps/${musica.title}/${musica.artist} - ${musica.title} (${musica.creator}) [${dificuldade}].osu`)
+    .then(res => res.text())
+    .then(osuText => {
+        mapa = parseOsuFile(osuText, 4); // 4 lanes 
+    });
+
+    carregarMusica(`./maps/${musica.title}/song.mp3`).then(() => {
         tocarMusica();
+        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./maps/${musica.title}/bg.jpg)`;
 
         scoreDiv.innerHTML = formatarScore(score);
         comboDiv.innerHTML = combo;
         accuracyDiv.innerHTML = `${precisao.toFixed(2)}%`;
+        bpm = musica.bpm;
+        offset = musica.offset;
 
         startTime = performance.now();
+
+        console.log(mapa);
 
         notasParaSpawnar = mapa.map(nota => {
             const tempoAjustado = nota.tempo - preempt;
@@ -376,6 +410,95 @@ async function iniciarJogo() {
         requestAnimationFrame(gameLoop);
     });
 }
+
+const songData = [
+    {
+        title: "ETERNAL DRAIN",
+        artist: "Colorful Sounds Port",
+        difficulties: ["Beginner", "Normal", "Hyper", "Another", "Black Another", "Eternal"],
+        bpm: 149,
+        offset: 4802,
+        creator: "Wh1teh" 
+    },
+    {
+        title: "HELIX",
+        artist: "ESTi",
+        difficulties: ["NM", "HD", "MX"],
+        bpm: 175,
+        offset: 2746,
+        creator: "xeona"
+    },
+    {
+        title: "ANiMA",
+        artist: "xi",
+        difficulties: ["Lv.4", "Lv.9", "Lv.15", "Lv.20", "Lv.24", "lv.30"],
+        bpm: 184,
+        offset: 1321,
+        creator: "Kuo Kyoka"
+    }, {
+        title: "Kaikai Kitan (TV Size)",
+        artist: "Eve",
+        difficulties: ["Easy", "Normal", "Hard", "Cursed Spirit"],
+        bpm: 185,
+        offset: 2275,
+        creator: "Syadow-"
+    }, {
+        title: "Crack Traxxxx",
+        artist: "Lite Show Magic",
+        difficulties: ["NOV", "ADV", "EXH"],
+        bpm: 220,
+        offset: 2655,
+        creator: "LeiN-"
+    }, {
+        title: "iLLness LiLin",
+        artist: "Kaneko Chiharu",
+        difficulties: ["BASIC", "NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "HEAVENLY"],
+        bpm: 280,
+        offset: 930,
+        creator: "Fresh Chicken"
+    }
+];
+
+const songList = document.getElementById("songList");
+
+songData.forEach((song, index) => {
+    const songEl = document.createElement("div");
+    songEl.className = "song";
+    songEl.innerHTML = `
+      <div class="song-title">${song.title}</div>
+      <div class="song-artist">${song.artist}</div>
+    `;
+
+    const diffList = document.createElement("div");
+    diffList.className = "difficulty-list";
+    diffList.style.display = "none"; // começa fechado
+
+    song.difficulties.forEach((diff, i) => {
+        const diffEl = document.createElement("div");
+        diffEl.className = "difficulty";
+        diffEl.textContent = diff;
+        diffEl.style.animationDelay = `${i * 0.1}s`; // atraso crescente
+        diffEl.addEventListener("click", () => {
+            iniciarJogo(song, diff);
+        });
+        diffList.appendChild(diffEl);
+      });      
+
+    songEl.appendChild(diffList);
+    songList.appendChild(songEl);
+
+    songEl.addEventListener("click", (e) => {
+        // Evita que o clique em uma dificuldade abra/feche o acordeão
+        if (e.target.classList.contains("difficulty")) return;
+        const isVisible = diffList.style.display === "block";
+        // Fecha todos os outros
+        document.querySelectorAll(".difficulty-list").forEach(el => {
+            el.style.display = "none";
+        });
+        // Abre só o atual (se estava fechado)
+        diffList.style.display = isVisible ? "none" : "block";
+    });
+});
 
 /**
  * Easter egg que aparece no console.
@@ -401,18 +524,18 @@ console.log(
      @@@               @@@@              @@@@@    
      @@@@              @@@@              @@@@@    
      @@@@@           @@@@@@@@          @@@@@@     
-      @@@@@@      @@@@      @@@@@   @@@@@@@@       
+      @@@@@@      @@@@      @@@@@   @@@@@@@@      
        @@@@@@@@@@@@@         @@@@@@@@@@@@@@       
-        @@@@@@@@@@@@         @@@@@@@@@@@@@         
-        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@         
+        @@@@@@@@@@@@         @@@@@@@@@@@@@        
+        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@        
      @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
-   @@@@@@@@@@@@@@@@@@@@@    @@@@@@@@@@@@@@@@@@@    
-  @@@@@@@@@@@@@@@@@@            @@@@@@@@@@@@@@@@   
-                                                                                         
- __     __        _            __  __             _       
-\\ \\   / /__ _ __| |_ _____  _|  \\/  | __ _ _ __ (_) __ _ 
- \\ \\ / / _ \\ '__| __/ _ \\ \\/ / |\\/| |/ _\` | '_ \\| |/ _\` |
-  \\ V /  __/ |  | ||  __/>  <| |  | | (_| | | | | | (_| |
+   @@@@@@@@@@@@@@@@@@@@@    @@@@@@@@@@@@@@@@@@@   
+  @@@@@@@@@@@@@@@@@@            @@@@@@@@@@@@@@@@  
+                                                  
+ __     __        _            __  __             _                 
+\\ \\   / /__ _ __| |_ _____  _|  \\/  | __ _ _ __ (_) __ _         
+ \\ \\ / / _ \\ '__| __/ _ \\ \\/ / |\\/| |/ _\` | '_ \\| |/ _\` |  
+  \\ V /  __/ |  | ||  __/>  <| |  | | (_| | | | | | (_| |          
    \\_/ \\___|_|   \\__\\___/_/\\_\\_|  |_|\__,_|_| |_|_|\\__,_|\n`,
     "font-family: monospace; background: linear-gradient(90deg, #ff00cc, #3333ff);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-weight: bold;"
 );

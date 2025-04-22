@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,20 @@
     <link rel="stylesheet" href="./css/style.css">
     <link rel="shortcut icon" href="./assets/favicon.png" type="image/x-icon">
 </head>
-<body>
+
+<body id="body">
     <div id="menu">
-        <img src="./assets/bm.png" alt="">
-        <h1>🎵 Bem-vindo ao VertexMania!</h1>
-        <p>Aperte <strong>Enter</strong> para começar</p>
+        <div class="head">
+            <h1>VertexMania 🐧</h1>
+            <p>Selecione uma <strong>música</strong> e uma <strong>dificuldade</strong> para jogar.</p>
+        </div>
+        <div class="song-list" id="songList">
+            <!-- Será preenchido via JavaScript -->
+          </div>        
     </div>
-    <div id="title">
-        <h2>VertexMania</h2>
+    <!-- <div id="title">
         <p>Use as teclas <strong>A S K L</strong> para acertar as notas!</p>
-    </div>
+    </div> -->
     <div id="score">
         <div id="pontuacao"></div>
         <div id="acc"></div>
@@ -41,4 +46,5 @@
     </div>
     <script type="module" src="./js/game.js"></script>
 </body>
+
 </html>
