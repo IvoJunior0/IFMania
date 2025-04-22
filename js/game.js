@@ -117,7 +117,7 @@ const durationMs = 141133;
 let bpm = 175;
 const beatInterval = 60000 / bpm;
 
-const playfieldHeight = 600;
+const playfieldHeight = game.offsetHeight;
 const intervaloAnimacaoNota = 16;
 const playfields = {
     "a": document.getElementById("playfield-a"),
@@ -263,13 +263,7 @@ function pausarGame() {
     gamePause = true;
 }
 
-// Toda vez que QUALQUER tecla seja pressionada durante o jogo, vai acontecer alguma dessas coisas aqui de baixo.
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && menu.style.display !== 'none' && !gameStarted) {
-        iniciarJogo();
-        return;
-    }
-    // tocarSom();
     const tecla = e.key.toLowerCase();
     if (tecla == "escape" && menu.style.display === 'none') {
         pausarGame();
@@ -395,8 +389,6 @@ async function iniciarJogo(musica, dificuldade) {
         offset = musica.offset;
 
         startTime = performance.now();
-
-        console.log(mapa);
 
         notasParaSpawnar = mapa.map(nota => {
             const tempoAjustado = nota.tempo - preempt;
