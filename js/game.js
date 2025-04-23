@@ -154,7 +154,7 @@ slider.addEventListener("input", () => {
     scrollVelocity = slider.value;
     preempt = (playfieldHeight / (scrollVelocity * (1000/47))) * (intervaloAnimacaoNota / 1000) * 1000;
 });
-
+console.log(preempt)
 function formatarScore(score) {
     return String(score).padStart(8, '0');
 }
@@ -327,8 +327,10 @@ function spawnNota(coluna, notaInfo) {
         const tempoAtual = getTempoAtual();
         const tempoRestante = tempoAtual - spawnTime;
         const progresso = tempoRestante / (preempt + tempoLN);  // 0→1
+        console.log(tempoRestante, preempt, tempoLN, tamanhoLN)
         // Antes do tempo de hitar a nota.
         // if (progresso < 0) {
+        //     console.log("progresso negativo")
         //     requestAnimationFrame(mover);
         //     return;
         // }
@@ -392,8 +394,7 @@ async function iniciarJogo(musica, dificuldade) {
         });
 
     carregarMusica(`./maps/${musica.title}/song.mp3`).then(() => {
-        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(./maps/${encodeURIComponent(musica.title)}/bg.jpg)`;
-        console.log(musica.title)
+        document.body.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("./maps/${encodeURIComponent(musica.title)}/bg.jpg")`;
 
         scoreDiv.innerHTML = formatarScore(score);
         comboDiv.innerHTML = combo;
@@ -405,7 +406,6 @@ async function iniciarJogo(musica, dificuldade) {
 
         notasParaSpawnar = mapa.map(nota => {
             const tempoAjustado = nota.tempo - preempt;
-            console.log(tempoAjustado)
             /**
              *  tempo -> Tempo (em ms) que a nota deve aparecer na tela.
              *  tempoOriginal -> Tempo (em ms) em que a nota deve ser pressionada.
