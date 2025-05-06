@@ -126,7 +126,7 @@ const beatInterval = 60000 / bpm;
 
 const playfieldHeight = game.offsetHeight;
 const intervaloAnimacaoNota = 16;
-const zonaDeAcerto = playfieldHeight - 30;
+const zonaDeAcerto = playfieldHeight - 90;
 
 const playfields = {
     "a": document.getElementById("playfield-a"),
@@ -160,7 +160,6 @@ slider.addEventListener("input", () => {
     scrollVelocity = slider.value;
     preempt = (playfieldHeight / (scrollVelocity * (1000/47))) * (intervaloAnimacaoNota / 1000) * 1000;
 });
-console.log(preempt)
 function formatarScore(score) {
     return String(score).padStart(8, '0');
 }
@@ -186,13 +185,13 @@ function verificarAcerto(coluna, tecla) {
 
     for (let nota of notas) {
         const top = parseInt(nota.style.top);
-        const differenceCoefficient = 150;
+        const differenceCoefficient = 20;
         const scrollSpeedTolerance = Math.abs((scrollVelocity - 0.94) * differenceCoefficient);
         const distancia = Math.abs(top - zonaDeAcerto);
         if (top <= 175) considerarInput = false;
 
         if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'normal') {  // Verifica se a nota já foi acertada
-            if (distancia <= 55 + differenceCoefficient) {
+            if (distancia <= 45 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -203,7 +202,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 320;
                 break;
-            } else if (distancia <= 70 + differenceCoefficient) {
+            } else if (distancia <= 60 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -214,7 +213,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 300;
                 break;
-            } else if (distancia <= 85 + differenceCoefficient) {
+            } else if (distancia <= 75 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -225,7 +224,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 200;
                 break;
-            } else if (distancia <= 100 + differenceCoefficient) {
+            } else if (distancia <= 90 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -236,7 +235,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 100;
                 break;
-            } else if (distancia <= 135 + differenceCoefficient) {
+            } else if (distancia <= 125 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -377,6 +376,7 @@ function gameLoop(timestamp) {
     for (const nota of notasParaSpawnar) {
         if (!nota.criada && tempoAtual >= nota.tempo) {
             const coluna = document.querySelector(`.column[data-key="${nota.tecla}"]`);
+            console.log(preempt)
             spawnNota(coluna, nota);
             nota.criada = true;
         }
@@ -386,7 +386,6 @@ function gameLoop(timestamp) {
 }
 
 async function iniciarJogo(musica, dificuldade) {
-    console.log(musica)
     gameStarted = true;
     menu.classList.add('transition');
     setTimeout(() => {
@@ -560,7 +559,7 @@ console.log(
    \\_/ \\___|_|   \\__\\___/_/\\_\\_|  |_|\__,_|_| |_|_|\\__,_|\n`,
     "font-family: monospace; background: linear-gradient(90deg, #ff00cc, #3333ff);-webkit-background-clip: text;-webkit-text-fill-color: transparent;font-weight: bold;"
 );
-console.log(`%cOlá, é um prazer encontrar-lo por aqui, entuasiasta de HTML!
+console.log(`%cOlá :) É um prazer encontrar-lo por aqui, entuasiasta de HTML!
 
 Este projeto foi criado apenas por diversão e para fazer alguns testes — nada muito sério por enquanto (eu acho).
 MAAAAS... se você curtiu e quer trocar uma ideia ou acompanhar meus outros trabalhos, aqui estão meus links:
