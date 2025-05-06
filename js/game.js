@@ -55,25 +55,32 @@ function parseOsuFile(osuText, totalLanes = 4) {
         const teclaIndex = Math.floor((x / 512) * totalLanes);
         const tecla = teclaMap[teclaIndex] || 'a'; // fallback pra 'a'
 
-        let tipo = 'normal';
-        let duracao = null;
+        // Nota normal
+        if ((tipoRaw & 128) === 0) {
+            notas.push({
+                tecla,
+                tempo,
+                tipo: 'normal',
+            });
+        } else {
+            // Nota longa (LN), converter head e tail em duas notas normais
+            const duracao = parseInt(parts[5]);
+            console.log(duracao)
 
-        if ((tipoRaw & 128) > 0) { // nota longa (slider)
-            tipo = 'slider';
-            duracao = parseInt(parts[5]);
+            // Head
+            notas.push({
+                tecla,
+                tempo,
+                tipo: 'normal',
+            });
+
+            // Tail
+            notas.push({
+                tecla,
+                tempo: tempo + duracao,
+                tipo: 'normal',
+            });
         }
-
-        const nota = {
-            tecla,
-            tempo,
-            tipo,
-        };
-
-        if (duracao !== null) {
-            nota.duracao = duracao;
-        }
-
-        notas.push(nota);
     }
 
     return notas;
@@ -122,7 +129,7 @@ const beatInterval = 60000 / bpm;
 
 const playfieldHeight = game.offsetHeight;
 const intervaloAnimacaoNota = 16;
-const zonaDeAcerto = playfieldHeight - 90;
+const zonaDeAcerto = playfieldHeight - 70;
 
 const playfields = {
     "a": document.getElementById("playfield-a"),
@@ -136,6 +143,7 @@ const playfields = {
  * [2] - Hit time (em ms)
  * [3] - End time (em ms)
  * [4] - Se a header do slider (se for um slider) foi acertada.
+ * [5] - Se soltou antes do tempo
  */
 const keyStates = {
     "a": [false, "tipo", 0, 0, false],
@@ -180,7 +188,9 @@ function verificarAcerto(coluna, tecla) {
 
     for (let nota of notas) {
         const top = parseInt(nota.style.top);
-        const distancia = Math.abs(top - zonaDeAcerto);
+        const differenceCoefficient = 1000;
+        const scrollSpeedTolerance = Math.abs((scrollVelocity - 0.94) * differenceCoefficient);
+        const distancia = Math.abs(top - zonaDeAcerto) + scrollSpeedTolerance;
         if (top <= 175) considerarInput = false;
 
         if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'normal') {  // Verifica se a nota já foi acertada
@@ -243,7 +253,7 @@ function verificarAcerto(coluna, tecla) {
         } else if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'slider') {
             if (keyStates[tecla][2] <= getTempoAtual() <= keyStates[tecla][2] + 200 && keyStates[tecla][0]) {
                 keyStates[tecla][4] = true;
-                console.log("segurando")
+                console.log("segurando");
             }
         }
     }
@@ -263,12 +273,13 @@ function verificarAcerto(coluna, tecla) {
 }
 
 function soltarLN(coluna, tecla) {
-    const endtime = keyStates[tecla][3];
-    if (keyStates[tecla][1] != 'slider') return;
-    if (endtime - 55 <= getTempoAtual <= endtime && keyStates[tecla][4]) {
-        console.log("300")
-        keyStates[tecla][4] = false;
+    if (keyStates[tecla][1] == 'normal' && !keyStates[tecla][4]) {
     }
+    const endtime = keyStates[tecla][3];
+    const notas = coluna.querySelectorAll('.nota');
+    for (let nota of notas) {
+    }
+    keyStates[tecla][4] = false;
 }
 
 //TODO: fzr isso funcionar dps
@@ -313,9 +324,9 @@ function spawnNota(coluna, notaInfo) {
         tempoLN = notaInfo.duracao - notaInfo.tempoOriginal
         tamanhoLN = (tempoLN * scrollVelocity) + 100; // + 50 pelo tamanho das notas normais.
         nota.style.height = `${tamanhoLN}px`;
-        nota.style.marginTop = `${-tamanhoLN}px`;
+        nota.style.transform = 'translateY(-100%)';
     } else {
-        nota.style.top = `0px`;
+        nota.style.transform = 'translateY(-100%)';
     }
 
     coluna.appendChild(nota);
@@ -327,7 +338,6 @@ function spawnNota(coluna, notaInfo) {
         const tempoAtual = getTempoAtual();
         const tempoRestante = tempoAtual - spawnTime;
         const progresso = tempoRestante / (preempt + tempoLN);  // 0→1
-        console.log(tempoRestante, preempt, tempoLN, tamanhoLN)
         // Antes do tempo de hitar a nota.
         // if (progresso < 0) {
         //     console.log("progresso negativo")
@@ -448,12 +458,12 @@ const songData = [
         offset: 1321,
         creator: "Kuo Kyoka"
     }, {
-        title: "Kaikai Kitan (TV Size)",
-        artist: "Eve",
-        difficulties: ["Easy", "Normal", "Hard", "Cursed Spirit"],
-        bpm: 185,
-        offset: 2275,
-        creator: "Syadow-"
+        title: "Metal Crusher",
+        artist: "toby fox",
+        difficulties: ["Beginner", "Easy", "Normal", "Hard", "Hyper", "Insane", "It's Showtime!"],
+        bpm: 116,
+        offset: 32,
+        creator: "Lumpita"
     }, {
         title: "Crack Traxxxx",
         artist: "Lite Show Magic",
