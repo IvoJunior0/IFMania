@@ -464,13 +464,6 @@ const songData = [
         offset: 32,
         creator: "Lumpita"
     }, {
-        title: "Crack Traxxxx",
-        artist: "Lite Show Magic",
-        difficulties: ["NOV", "ADV", "EXH"],
-        bpm: 220,
-        offset: 2655,
-        creator: "LeiN-"
-    }, {
         title: "iLLness LiLin",
         artist: "Kaneko Chiharu",
         difficulties: ["BASIC", "NOVICE", "ADVANCED", "EXHAUST", "MAXIMUM", "HEAVENLY"],
