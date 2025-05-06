@@ -326,6 +326,12 @@ input[type=range]::-moz-range-thumb {
     background: #2c2c2c;
 }
 
+#progresso {
+    position: absolute;
+    top: 100px;
+    right: 40px;
+}
+
 /* .feedback {
     position: absolute;
     bottom: 60px;

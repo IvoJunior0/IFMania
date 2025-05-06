@@ -2,9 +2,6 @@
  * Esse código tá um caos.
  * Uma outra hora eu organizo ele e deixo cometado.
  * Por enquanto, quero fazer ele ser minimamente funcional.
- * 
- * OBS: em momentos do código quando for dito slider, ln ou hold notes,
- * se refere a mesma coisa.
  */
 // Lidando com o audio e efeitos sonoros
 let audioContext;
@@ -65,7 +62,6 @@ function parseOsuFile(osuText, totalLanes = 4) {
         } else {
             // Nota longa (LN), converter head e tail em duas notas normais
             const duracao = parseInt(parts[5]);
-            console.log(duracao)
 
             // Head
             notas.push({
@@ -75,11 +71,11 @@ function parseOsuFile(osuText, totalLanes = 4) {
             });
 
             // Tail
-            notas.push({
-                tecla,
-                tempo: tempo + duracao,
-                tipo: 'normal',
-            });
+            // notas.push({
+            //     tecla,
+            //     tempo: duracao,
+            //     tipo: 'normal',
+            // });
         }
     }
 
@@ -96,6 +92,7 @@ const hitImage = document.getElementById('maniahit');
 const accuracyDiv = document.getElementById('acc');
 const scoreDiv = document.getElementById('pontuacao');
 const beatline = document.getElementById('beatline');
+const progressBar = document.getElementById('progress-bar');
 
 // Esse slider é do formulário, não o slider long note.
 const slider = document.getElementById("slider");
@@ -129,7 +126,7 @@ const beatInterval = 60000 / bpm;
 
 const playfieldHeight = game.offsetHeight;
 const intervaloAnimacaoNota = 16;
-const zonaDeAcerto = playfieldHeight - 70;
+const zonaDeAcerto = playfieldHeight - 30;
 
 const playfields = {
     "a": document.getElementById("playfield-a"),
@@ -156,6 +153,7 @@ let scrollVelocity = 0.94;
 // Não me perguntem porque isso funciona não porque tem essa equação maluca.
 // Ela funciona e isso importa
 let preempt = (playfieldHeight / (scrollVelocity * (1000/47))) * (intervaloAnimacaoNota / 1000) * 1000;
+let mapEndTime = null;
 
 slider.addEventListener("input", () => {
     valor.textContent = slider.value;
@@ -188,13 +186,13 @@ function verificarAcerto(coluna, tecla) {
 
     for (let nota of notas) {
         const top = parseInt(nota.style.top);
-        const differenceCoefficient = 1000;
+        const differenceCoefficient = 150;
         const scrollSpeedTolerance = Math.abs((scrollVelocity - 0.94) * differenceCoefficient);
-        const distancia = Math.abs(top - zonaDeAcerto) + scrollSpeedTolerance;
+        const distancia = Math.abs(top - zonaDeAcerto);
         if (top <= 175) considerarInput = false;
 
         if (!nota.classList.contains('acertada') && keyStates[tecla][1] === 'normal') {  // Verifica se a nota já foi acertada
-            if (distancia <= 45) {
+            if (distancia <= 55 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -205,7 +203,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 320;
                 break;
-            } else if (distancia <= 60) {
+            } else if (distancia <= 70 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -216,7 +214,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 300;
                 break;
-            } else if (distancia <= 75) {
+            } else if (distancia <= 85 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -227,7 +225,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 200;
                 break;
-            } else if (distancia <= 90) {
+            } else if (distancia <= 100 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -238,7 +236,7 @@ function verificarAcerto(coluna, tecla) {
                 hitsQtdTotal++;
                 score += 100;
                 break;
-            } else if (distancia <= 125) {
+            } else if (distancia <= 135 + differenceCoefficient) {
                 acertou = true;
                 considerarInput = true;
                 combo++;
@@ -332,7 +330,6 @@ function spawnNota(coluna, notaInfo) {
     coluna.appendChild(nota);
     const spawnTime = notaInfo.tempo;
 
-    let top = 0;
     function mover() {
         if (gamePause) return;
         const tempoAtual = getTempoAtual();
@@ -375,6 +372,7 @@ function gameLoop(timestamp) {
     if (gamePause) return;
 
     const tempoAtual = getTempoAtual(); // em ms
+    progressBar.value = (tempoAtual / mapEndTime) * 100;
 
     for (const nota of notasParaSpawnar) {
         if (!nota.criada && tempoAtual >= nota.tempo) {
@@ -400,7 +398,8 @@ async function iniciarJogo(musica, dificuldade) {
     fetch(`./maps/${musica.title}/${musica.artist} - ${musica.title} (${musica.creator}) [${dificuldade}].osu`)
         .then(res => res.text())
         .then(osuText => {
-            mapa = parseOsuFile(osuText, 4); // 4 lanes 
+            mapa = parseOsuFile(osuText, 4); // 4 lanes
+            mapEndTime = mapa[mapa.length-1].tempo;
         });
 
     carregarMusica(`./maps/${musica.title}/song.mp3`).then(() => {
@@ -478,6 +477,13 @@ const songData = [
         bpm: 280,
         offset: 930,
         creator: "Fresh Chicken"
+    }, {
+        title: "Final Boss",
+        artist: "Thaehan",
+        difficulties: ["First Stage", "Second Stage", "Third Stage", "Final Stage"],
+        bpm: 130,
+        offset: 100,
+        creator: "AHHHHHHHHHHHHHH"
     }
 ];
 
